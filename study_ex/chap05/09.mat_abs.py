@@ -15,7 +15,7 @@ print("[dif_img2(roi) int16]  = \n%s\n"  % dif_img2[y:y+h, x:x+w])
 print("[abs_dif1(roi)] = \n%s\n" % abs_dif1[y:y+h, x:x+w])
 print("[abs_dif2(roi)] = \n%s\n" % abs_dif2[y:y+h, x:x+w])
 
-titles = ['image1', 'image2', 'dif_img1', 'dif_img2', 'abs_dif1','abs_dif2']
+titles = ['image1', 'image2', 'dif_img1', 'abs_dif1','abs_dif2']
 for title in titles:
     cv2.imshow(title, eval(title))
 cv2.waitKey(0)
