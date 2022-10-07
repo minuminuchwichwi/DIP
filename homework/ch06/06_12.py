@@ -1,6 +1,7 @@
 import numpy as np, cv2
 
 image = cv2.imread("example.jpg", cv2.IMREAD_GRAYSCALE) #이미지를 그레이스케일로 읽음
+if image is None: raise Exception("영상 파일 읽기 오류 발생")
 
 _, binary_image = cv2.threshold(image, 128, 255, cv2.THRESH_BINARY)     #이미지를 이진화시킴
 binary_image[binary_image == 0] = 1
