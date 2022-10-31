@@ -4,7 +4,7 @@ import numpy as np
 capture = cv2.VideoCapture(0)
 if capture.isOpened() == False: raise Exception("카메라가 연결되지 않음")
 
-capture.set(cv2.CAP_PROP_FRAME_WIDTH, 400)      #영상의 크기를 600*600으로 설정
+capture.set(cv2.CAP_PROP_FRAME_WIDTH, 400)
 capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 300)
 capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
 capture.set(cv2.CAP_PROP_BRIGHTNESS, 100)
