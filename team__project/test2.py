@@ -4,7 +4,6 @@ import numpy as np, cv2
 import matplotlib.pyplot as plt
 import wave
 import pyaudio
-import librosa
 import os
 import pandas as pd
 from sklearn import metrics
