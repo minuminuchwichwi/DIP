@@ -13,8 +13,11 @@ PLUS           = 8  # 밝게 하기 명령
 MINUS          = 9  # 어둡게 하기 명령
 CREAR          = 10 # 지우기	명령
 COLOR          = 11 # 색상 아이콘
-PALETTE        = 12 # 색상팔레트
-HUE_IDX        = 13 # 색상인덱스
+ZOOMIN         = 12
+ZOOMOUT        = 13
+PALETTE        = 14 # 색상팔레트
+HUE_IDX        = 15 # 색상인덱스
+
 
 # 전역 변수
 mouse_mode, draw_mode = 0, 0                # 그리기 모드, 마우스 상태

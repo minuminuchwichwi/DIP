@@ -29,7 +29,7 @@ center = np.divmod(size, 2)[0]                  # 회전 중심 좌표 - 크기�
 angle, tr = 45.0, (200, 0)                                      # 각도와 평행이동
 
 aff_mat1 = getAffineMat(center, angle)                          # 중심 좌표 기준 회전
-aff_mat2 = getAffineMat((0,0), 0, 2.0, 1.5)                     # 크기 변경 - 확대
+aff_mat2 = getAffineMat(center, 0, 1.1, 1.1)                     # 크기 변경 - 확대
 aff_mat3 = getAffineMat(center, angle, 0.7, 0.7)                # 회전 및 축소
 aff_mat4 = getAffineMat(center, angle, 0.7, 0.7, tr)            # 복합 변환
 
@@ -39,8 +39,8 @@ dst3 = affine_transform(image, aff_mat3)                        # 사용자 정�
 dst4 = affine_transform(image, aff_mat4)
 
 cv2.imshow("image", image)
-cv2.imshow("dst1_only_rotate", dst1)
+#cv2.imshow("dst1_only_rotate", dst1)
 cv2.imshow("dst2_only_scaling", dst2)
-cv2.imshow("dst3_rotate_scaling", dst3)
-cv2.imshow("dst4_rotate_scaling_translate", dst4)
+#cv2.imshow("dst3_rotate_scaling", dst3)
+#cv2.imshow("dst4_rotate_scaling_translate", dst4)
 cv2.waitKey(0)

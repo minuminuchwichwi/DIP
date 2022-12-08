@@ -6,7 +6,7 @@ eye_cascade = cv2.CascadeClassifier("haarcascade_eye.xml")  # 눈 검출기
 image, gray = preprocessing(34)  # 전처리
 if image is None: raise Exception("영상 파일을 읽기 에러")
 
-faces = face_cascade.detectMultiScale(gray, 1.1, 2, 0, (100, 100));  # 얼굴 검출
+faces = face_cascade.detectMultiScale(gray, 1.1, 2, 0, (100, 100))  # 얼굴 검출
 if faces.any():
     x, y, w, h = faces[0].tolist()
     face_image = image[y:y + h, x:x + w]  # 얼굴 영역 영상 가져오기

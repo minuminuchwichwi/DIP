@@ -1,19 +1,17 @@
 import numpy as np, cv2
 
 def place_icons(image, size):
-    icon_name = ["rect" , "circle", "eclipe", "line",   # 아이콘 파일 이름
-                 "brush", "eraser", "open"  , "save",
-                 "plus" , "minus" , "clear" , "color"]
-
+    icon_name = ["rect", "circle", "eclipe", "line", "brush", "eraser",  # 아이콘 파일 이름
+                 "open", "save", "plus", "minus", "clear", "color", "zoomin", "zoomout"]
     icons = [(i%2, i//2, 1, 1) for i in range(len(icon_name))]
     icons = np.multiply(icons, size*2)                  # icons 모든 원소에 size 곱합
 
     for roi, name in zip(icons, icon_name):
-        icon = cv2.imread('images/icon/%s.jpg' %name , cv2.IMREAD_COLOR)
+        icon = cv2.imread('images/icon/%s.jpg' % name, cv2.IMREAD_COLOR)
         if icon is None: continue
         x, y, w, h = roi
         image[y:y+h, x:x+w] = cv2.resize(icon, size)
-    return list(icons)                   # 팔레트 생성
+    return list(icons)
 
 def create_hueIndex(image, roi):
     x, y, w, h =  roi                         # 관심영역 너비, 높이
