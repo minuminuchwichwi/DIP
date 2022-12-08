@@ -18,7 +18,7 @@ def onMouse(event, x, y, flags, param):
                 cv2.imshow("image", image)
 
     if event == cv2.EVENT_LBUTTONUP:            # 왼쪽 버튼 떼기
-        x, y, w, h =  hist_roi
+        x, y, w, h = hist_roi
         image[y:y+h, x:x+w] = pre_img
         cv2.imshow("image", image)
 

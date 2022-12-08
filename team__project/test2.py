@@ -1,167 +1,111 @@
-import librosa
-import librosa.display
 import numpy as np, cv2
-import matplotlib.pyplot as plt
-import wave
-import pyaudio
-import librosa
-import os
-import pandas as pd
-from sklearn import metrics
-from sklearn.linear_model import LogisticRegression #텐서플로우로 바꿀예정
-import speech_recognition as speech
-import pymysql
 
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 44100
-RECORD_SECONDS = 3
-WAVE_OUTPUT_FILENAME = "output.wav"
+def draw_rect(img):
+    rois = [(p - small, small * 2) for p in pts1]
+    for (x, y), (w, h) in np.int32(rois):
+        roi = img[y:y + h, x:x + w]  # 좌표 사각형 범위 가져오기
+        val = np.full(roi.shape, 80,
+                      np.uint8)  # 컬러(3차원) 행렬 생성      cv2.add(roi, val, roi)                               # 관심영역 밝기 증가
+        cv2.add(roi, val, roi)
+        cv2.rectangle(img, (x, y, w, h), (255, 0, 0), 1)
+    cv2.polylines(img, [pts1.astype(int)], True, (255, 0, 0), 1)  # pts는 numpy 배열
+    if cnt == 0:
+        cv2.imshow("img", img)
+    else: cv2.imshow("dst",img)
 
-DATA_PATH = "./password/"
-train_data=[]#train_date 저장할 공간
-train_label=[]#train_label 저장할 공간
-test_data=[]#train_date 저장할 공간
-test_label=[]#train_label 저장할 공간
+def contain_pts(p, p1, p2):
+    return p1[0] <= p[0] < p2[0] and p1[1] <= p[1] < p2[1]
 
-pass_score = 90#비밀번호 인증 기준 90%
+def warp(img):
+    perspect_mat = cv2.getPerspectiveTransform(pts1, pts2)
+    dst = cv2.warpPerspective(img, perspect_mat, (350, 400), cv2.INTER_CUBIC)
+    cv2.imshow("perspective transform", dst)
+    return dst
 
-def load_wave_generator(path):
-    batch_waves = []
-    labels = []
-    # input_width=CHUNK*6 # wow, big!!
-    folders = os.listdir(path)
-    # while True:
-    # print("loaded batch of %d files" % len(files))
-    for folder in folders:
-        if not os.path.isdir(path): continue  # 폴더가 아니면 continue
-        files = os.listdir(path + "/" + folder)
-        print("Foldername :", folder, "-", len(files))  # 폴더 이름과 그 폴더에 속하는 파일 갯수 출력
-        for wav in files:
-            if not wav.endswith(".wav"):
-                continue
-            else:
-                global train_data, train_label  # 전역변수를 사용하겠다.
-                print("Filename :", wav)  # .wav 파일이 아니면 continue
-                y, sr = librosa.load(path + "/" + folder + "/" + wav)
-                mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=int(sr * 0.01), n_fft=int(sr * 0.02)).T
-                if (len(train_data) == 0):
-                    train_data = mfcc
-                    train_label = np.full(len(mfcc), int(folder))
-                else:
-                    train_data = np.concatenate((train_data, mfcc), axis=0)
-                    train_label = np.concatenate((train_label, np.full(len(mfcc), int(folder))), axis=0)
-                    print("mfcc :", mfcc.shape)
+def onMouse(event, x, y, flags, param):
+    global check, cnt
+    if event == cv2.EVENT_LBUTTONDOWN:
+        for i, p in enumerate(pts1):
+            p1, p2 = p - small, p + small  # p점에서 우상단, 좌하단 좌표생성
+            if contain_pts((x, y), p1, p2): check = i
+
+    if event == cv2.EVENT_LBUTTONUP: check = -1  # 좌표 번호 초기화
+
+    if event == cv2.EVENT_RBUTTONDOWN:
+        no = int(input("몇번으로 저장하시겠습니까?"))
+        cv2.imwrite("images/cat%d.jpg" % no, warp(np.copy(img)))
+        cnt = 1
+        draw_rect(detectCatFace(no))
+
+    if check >= 0:  # 좌표 사각형 선택 시
+        pts1[check] = (x, y)
+        draw_rect(np.copy(img))
+        warp(np.copy(img))
 
 
-load_wave_generator(DATA_PATH)
 
-p = pyaudio.PyAudio() # 오디오 객체 생성
+face_cascade = cv2.CascadeClassifier("haarcascade_frontalcatface.xml")
+cascade = 'C:/PyCharm Community Edition 2022.2.1/Teamp/haarcascade_frontalcatface.xml'
 
-stream = p.open(format=FORMAT, # 16비트 포맷
-                channels=CHANNELS, #  모노로 마이크 열기
-                rate=RATE, #비트레이트
-                input=True,
-                frames_per_buffer=CHUNK) # CHUNK만큼 버퍼가 쌓인다.
 
-print("Start to record the audio.")
+def detectCatFace(no):
+    # 이미지 불러오기
+    img = cv2.imread('images/cat%d.jpg' % no, cv2.IMREAD_COLOR)
+    if img is None: raise Exception("영상파일 읽기 에러")
+    # 회색으로 변경
+    grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # 얼굴 검출0
+    faces = face_cascade.detectMultiScale(grayImg, 1.1, 2, 0, (100, 100))
+    # 검출된 얼굴 개수 출력
+    print("The number of images found is : " + str(len(faces)))
+    # 검출된 얼굴 위치에 녹색 상자그리기
+    for (x, y, w, h) in faces:
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    # 검출된 얼굴(녹색 상자가 그려진) 이미지 데이터를 리턴
+    return img
 
-frames = [] # 음성 데이터를 채우는 공간
 
-for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-    #지정한  100ms를 몇번 호출할 것인지 10 * 3 = 30  100ms 버퍼 30번채움 = 3초
-    data = stream.read(CHUNK)
-    frames.append(data)
+small = np.array((12, 12))  # 좌표 사각형 크기
+check = -1  # 선택 좌표 사각형 번호 초기화
+pts1 = np.float32([(100, 100), (300, 100), (300, 300), (100, 300)])
+pts2 = np.float32([(0, 0), (400, 0), (400, 350), (0, 350)])  # 목적 영상 4개 좌표                         # 목적 영상 4개 좌표
+'''
+scale factor는 1에 가까울수록 인식율이 좋지만 
+그만큼 느려짐(그만큼 많은  
+'''
+SF = 1.00
+'''
+내부 알고리즘에서 최소한 검출된 횟수이상 되야 인식
+0이면 무수한 오 검출이 되고
+1이면 한번 이상 검출된 곳만 인식된다.
+값이 높아질수록 오인식율은 줄지만 그만큼 
+인식율이 떨어진다.
+'''
+N = 2
+'''
+검출하려는 이미지의 최소 사이즈
+이 값보다 작은 이미지는 무시 
+'''
+MS = (50, 50)
 
-print("Recording is finished.")
+# 고양이 얼굴 인식용 haarcascade 파일 위치
 
-stream.stop_stream() # 스트림닫기
-stream.close() # 스트림 종료
-p.terminate() # 오디오객체 종료
+# 고양이 얼굴 인식 cascade 생성
 
-# WAVE_OUTPUT_FILENAME의 파일을 열고 데이터를 쓴다.
-wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
-wf.setnchannels(CHANNELS)
-wf.setsampwidth(p.get_sample_size(FORMAT))
-wf.setframerate(RATE)
-wf.writeframes(b''.join(frames))
-wf.close()
+# 얼굴 검출 함수
 
-spf = wave.open(WAVE_OUTPUT_FILENAME,'r')
 
-signal = spf.readframes(-1)
-signal = np.frombuffer(signal, dtype=np.int16)
+# 얼굴 검출 함수 호출
+cnt = 0
+no = int(input("고양이 영상 번호 (0~20): "))
+img = detectCatFace(no)
+if img is None: raise Exception("영상파일 읽기 에러")
+# 검출된 이미지가 있다면 화면에 표시
+if len(img) != 0:
+    cv2.imshow('img', img)
+draw_rect(np.copy(img))
+cv2.setMouseCallback("img", onMouse, 0)
+# 아무키나 눌릴때까지 대기
+cv2.waitKey(0)
 
-#시간 흐름에 따른 그래프를 그리기 위한 부분
-Time = np.linspace(0, len(signal)/RATE, num=len(signal))
-# plt.figure(1)
-# plt.title('Voice Signal Wave...')
-# #plt.plot(signal) // 음성 데이터의 그래프
-# plt.plot(Time, signal)
-# plt.show()
-
-print("train_data.shape :", train_data.shape, type(train_data))
-print("train_label.shape :", train_label.shape, type(train_label))
-clf = LogisticRegression(solver='lbfgs', max_iter=100)
-clf.fit(train_data, train_label)
-
-y, sr = librosa.load(WAVE_OUTPUT_FILENAME)  # y=signal, sr=sample_rate
-plt.figure(figsize=(14, 5))
-librosa.display.waveshow(y, sr)
-plt.xlabel("Time (s)")
-plt.ylabel("Amplitude")
-plt.title("Waveform")
-plt.show()
-mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13, hop_length=int(sr * 0.01), n_fft=int(sr * 0.02)).T
-
-y_test_estimated = clf.predict(mfcc)
-print(y_test_estimated)
-test_label = np.full(len(mfcc), 0)
-print(test_label)
-
-ac_score = metrics.accuracy_score(y_test_estimated, test_label)
-print("정답률 =", ac_score)
-print(pd.value_counts(pd.Series(y_test_estimated)))
-
-most_frequency = max((y_test_estimated).tolist(), key=(y_test_estimated).tolist().count)
-if most_frequency == 0:
-    name = 'min'
-if most_frequency == 1:
-    name = 'song'
-print("가장 근접한 사용자 이름 : ", name)
-
-score = round(ac_score*100, 2)
-print(score)
-if score >= pass_score:
-    r = speech.Recognizer()
-    record = speech.AudioFile(WAVE_OUTPUT_FILENAME)
-    with record as source:
-        aud = r.record(source)
-    try:
-        audio = r.recognize_google(aud, language="ko-KR")
-        print("입력한 비밀번호 : ", audio)
-    except speech.UnknownValueError:
-        print("Your speech can not understand")
-    except speech.RequestError as e:
-        print("Request Error!; {0}".format(e))
-
-    # 저장된 비밀번호를 반환하기 위해 데이터베이스에서 비밀번호를 꺼냄
-    conn = pymysql.connect(host='localhost', user='root', password='1234', db='save_password', charset='utf8')
-    cursor = conn.cursor()
-
-    sql = '''SELECT password from user WHERE name = %s'''
-    cursor.execute(sql, name)
-    with conn:
-        with conn.cursor() as cur:
-            cur.execute(sql, name)
-            result = cur.fetchall()
-            for data in result:
-                password = data[0]
-
-    if audio == password:
-        print("잠금이 해제됩니다..")
-    else:
-        print("비밀번호가 다릅니다..")
-else :
-    print("등록된 사용자와 일치하지 않습니다..")
+cv2.destroyWindow('img')
