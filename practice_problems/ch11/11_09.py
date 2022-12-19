@@ -28,7 +28,7 @@ if faces.any():
         print("왼쪽 눈 미검출")
     if len(right_eyes) >= 1:  # 눈 사각형이 검출되면
         for ex, ey, ew, eh in right_eyes:
-            center = (x + ex + ew/2, y + ey + eh//2)
+            center = (x + ex + ew//2, y + ey + eh//2)
             cv2.circle(image, center, 10, (255, 0, 0), 2)  # 오른쪽 눈 중심에 파란색 원 그리기
     else:
         print("오른쪽 눈 미검출")
