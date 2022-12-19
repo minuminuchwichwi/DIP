@@ -10,6 +10,9 @@ def preprocessing(no):  # 검출 전처리
 face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")  # 정면 검출기
 lefteye_cascade = cv2.CascadeClassifier("haarcascade_lefteye_2splits.xml")  # 왼눈 검출기
 righteye_cascade = cv2.CascadeClassifier("haarcascade_righteye_2splits.xml")  # 오른눈 검출기
+#xml파일을 못읽어올때,
+#lefteye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades+"haarcascade_lefteye_2splits.xml")  # 왼눈 검출기
+#righteye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades+"haarcascade_righteye_2splits.xml")  # 오른눈 검출기
 
 image, gray = preprocessing(34)  # 전처리
 if image is None: raise Exception("영상 파일 읽기 에러")
